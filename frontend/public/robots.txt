@@ -1,0 +1,450 @@
+import React, { useState, useEffect } from "react";
+import { Lock, Upload, FileText, CheckCircle, LogOut, User, UserPlus, Download, Folder, Trash2, RefreshCcw, Key, ArrowLeft, Mail, Share2, Settings, Moon, Sun, X } from "lucide-react";
+
+const API_URL = "http://localhost:5000/api";
+
+function App() {
+  // Views: login, register, otp, dashboard, settings, trash, forgot-email, forgot-otp, reset-password
+  const [view, setView] = useState("login");
+  
+  // --- USER DATA STATES ---
+  const [name, setName] = useState("Deepchand Kumawat");
+  const [email, setEmail] = useState("deepchandkhowal123@gmail.com");
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  
+  // --- THEME STATE ---
+  const [darkMode, setDarkMode] = useState(false);
+  
+  // --- DRAG & DROP STATE ---
+  const [dragActive, setDragActive] = useState(false);
+
+  // --- FILES & TRASH MANAGEMENT (Saved in Memory) ---
+  const [files, setFiles] = useState(() => {
+    const saved = localStorage.getItem("secureFiles");
+    return saved ? JSON.parse(saved) : [
+      { id: 1, name: "Demo_Screenshot.png", isDemo: true, date: "12/01/2025" }
+    ];
+  });
+
+  const [trashFiles, setTrashFiles] = useState(() => {
+    const saved = localStorage.getItem("secureTrash");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Save data automatically whenever it changes
+  useEffect(() => {
+    localStorage.setItem("secureFiles", JSON.stringify(files));
+    localStorage.setItem("secureTrash", JSON.stringify(trashFiles));
+    
+    // Save User Profile Updates if changed
+    const user = { name, email, password };
+    localStorage.setItem("secureUser", JSON.stringify(user));
+  }, [files, trashFiles, name, email, password]);
+
+  // --- THEME COLORS CONFIGURATION ---
+  const theme = {
+    bg: darkMode ? "#0f172a" : "#f0f2f5", // Background
+    text: darkMode ? "#f1f5f9" : "#333",   // Text Color
+    cardBg: darkMode ? "#1e293b" : "white", // Card Background
+    navbar: darkMode ? "#020617" : "#2c3e50", // Top Bar
+    border: darkMode ? "#334155" : "#e5e7eb", // Borders
+    inputBg: darkMode ? "#334155" : "#f4f6f7", // Input Box
+    inputText: darkMode ? "white" : "black",
+    uploadBg: darkMode ? "#0f172a" : "#f0f8ff",
+    fileRow: darkMode ? "#1e293b" : "#ecf0f1",
+    iconColor: darkMode ? "#94a3b8" : "#64748b"
+  };
+
+  // --- STYLES OBJECT ---
+  const styles = {
+    container: { minHeight: "100vh", backgroundColor: theme.bg, fontFamily: "Arial, sans-serif", color: theme.text, display: "flex", flexDirection: "column", transition: "all 0.3s ease" },
+    
+    // Navigation Bar
+    navbar: { backgroundColor: theme.navbar, padding: "15px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", color: "white", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)", position: "sticky", top: 0, zIndex: 50 },
+    navLogo: { fontSize: "22px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "10px", color: "#f1c40f", cursor: "pointer" },
+    navRight: { display: "flex", alignItems: "center", gap: "20px" },
+    iconBtn: { background: "none", border: "none", cursor: "pointer", color: "white", display: "flex", alignItems: "center", padding: "8px", borderRadius: "50%", transition: "background 0.2s" },
+    logoutBtn: { backgroundColor: "#ef4444", color: "white", padding: "8px 20px", borderRadius: "4px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "14px", transition: "background 0.2s" },
+    
+    // Authentication Screens
+    authContainer: { display: "flex", justifyContent: "center", alignItems: "center", flex: 1, padding: "20px" },
+    authBox: { backgroundColor: theme.cardBg, padding: "40px", borderRadius: "12px", boxShadow: "0 10px 25px rgba(0,0,0,0.1)", width: "100%", maxWidth: "400px", textAlign: "center", color: theme.text, border: `1px solid ${theme.border}` },
+    input: { width: "100%", padding: "12px", marginBottom: "15px", border: `1px solid ${theme.border}`, borderRadius: "6px", backgroundColor: theme.inputBg, color: theme.inputText, fontSize: "15px", outline: "none" },
+    loginBtn: { width: "100%", padding: "12px", backgroundColor: "#22c55e", color: "white", border: "none", borderRadius: "6px", fontSize: "16px", fontWeight: "bold", cursor: "pointer", marginTop: "10px" },
+    link: { color: "#3b82f6", fontSize: "14px", cursor: "pointer", marginTop: "15px", display: "block", textDecoration: "none" },
+    
+    // Dashboard Content
+    mainContent: { maxWidth: "1000px", margin: "40px auto", width: "100%", padding: "0 20px" },
+    card: { backgroundColor: theme.cardBg, borderRadius: "12px", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)", padding: "30px", marginBottom: "30px", color: theme.text, border: `1px solid ${theme.border}` },
+    sectionHeader: { fontSize: "20px", fontWeight: "bold", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px", color: darkMode ? "#60a5fa" : "#2c3e50", justifyContent: "space-between", borderBottom: `1px solid ${theme.border}`, paddingBottom: "15px" },
+    
+    // Upload Area (Drag & Drop)
+    uploadContainer: { 
+        border: `2px dashed ${dragActive ? "#22c55e" : "#3b82f6"}`, 
+        borderRadius: "12px", padding: "50px", textAlign: "center", 
+        backgroundColor: dragActive ? (darkMode ? "#064e3b" : "#dcfce7") : theme.uploadBg,
+        transition: "all 0.2s ease",
+        cursor: "pointer"
+    },
+    
+    // File List
+    fileRow: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "15px 20px", backgroundColor: theme.fileRow, borderLeft: "5px solid #3b82f6", marginBottom: "12px", borderRadius: "6px", color: theme.text, transition: "transform 0.1s" },
+    fileRowDeleted: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "15px 20px", backgroundColor: darkMode ? "#450a0a" : "#fee2e2", borderLeft: "5px solid #ef4444", marginBottom: "12px", borderRadius: "6px", color: theme.text },
+    fileName: { display: "flex", alignItems: "center", gap: "12px", fontWeight: "500", fontSize: "15px" },
+    actionBtns: { display: "flex", gap: "8px" },
+    btnBase: { padding: "8px 12px", borderRadius: "4px", border: "none", cursor: "pointer", fontSize: "12px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "5px", color: "white", transition: "opacity 0.2s" },
+    
+    trashToggle: { color: theme.iconColor, fontSize: "14px", cursor: "pointer", textDecoration: "underline", display: "flex", alignItems: "center", gap: "5px" }
+  };
+
+  // --- API HELPERS ---
+  const sendOtpApi = async (targetEmail) => {
+    try {
+      const res = await fetch(`${API_URL}/send-otp`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: targetEmail })
+      });
+      const data = await res.json();
+      return data.success;
+    } catch (e) { alert("Backend connect nahi ho raha. Kya kaali window khuli hai?"); return false; }
+  };
+
+  // --- AUTHENTICATION LOGIC ---
+  const handleRegister = () => {
+    if (!name || !email || !password) return alert("Please fill all fields");
+    const user = { name, email, password };
+    localStorage.setItem("secureUser", JSON.stringify(user));
+    alert("Registration Successful! You can now login.");
+    setView("login");
+    setPassword(""); 
+  };
+
+  const handleLogin = async () => {
+    const savedUser = JSON.parse(localStorage.getItem("secureUser"));
+    
+    // Check Saved User or Fallback Demo User
+    const isValidUser = (savedUser && name === savedUser.name && password === savedUser.password) || 
+                        (!savedUser && name === "Deepchand Kumawat" && password === "admin");
+
+    if (isValidUser) {
+        const targetEmail = savedUser ? savedUser.email : "deepchandkhowal123@gmail.com";
+        setEmail(targetEmail);
+        const sent = await sendOtpApi(targetEmail);
+        if(sent) { setView("otp"); alert(`Password Verified! OTP sent to ${targetEmail}`); }
+    } else {
+        alert("Invalid Username or Password!");
+    }
+  };
+
+  // --- FORGOT PASSWORD ---
+  const handleForgotPassword = async () => {
+    if(!email) return alert("Enter your registered Email");
+    const sent = await sendOtpApi(email);
+    if(sent) { setView("forgot-otp"); alert(`OTP sent to ${email} for password reset.`); }
+  };
+
+  // *** FIXED: Added Missing Function ***
+  const handleVerifyForgotOtp = async () => {
+     try {
+      const res = await fetch(`${API_URL}/verify-otp`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: otp })
+      });
+      const data = await res.json();
+      if (data.success) setView("reset-password");
+      else alert("Wrong OTP entered!");
+    } catch (e) { alert("Verification Failed"); }
+  };
+
+  const handleResetPassword = () => {
+    if(!newPassword) return alert("Enter new password");
+    const savedUser = JSON.parse(localStorage.getItem("secureUser"));
+    
+    if(savedUser) {
+        savedUser.password = newPassword;
+        localStorage.setItem("secureUser", JSON.stringify(savedUser));
+        alert("Password Reset Successful! Please Login with new password.");
+        setView("login");
+        setNewPassword("");
+    } else { 
+        alert("Demo user cannot reset password. Please Register a real account."); 
+        setView("login"); 
+    }
+  };
+
+  // --- LOGIN OTP VERIFICATION ---
+  const verifyLoginOtp = async () => {
+    try {
+      const res = await fetch(`${API_URL}/verify-otp`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: otp })
+      });
+      const data = await res.json();
+      if (data.success) setView("dashboard"); else alert("Wrong OTP");
+    } catch (e) { alert("Verification Failed"); }
+  };
+
+  // --- FILE HANDLING (Upload, Drag & Drop, Download) ---
+  const handleDrag = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    else if (e.type === "dragleave") setDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+  };
+
+  const handleFileUpload = (e) => {
+    if (e.target.files && e.target.files[0]) processFile(e.target.files[0]);
+  };
+
+  const processFile = (file) => {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const newFile = { 
+            id: Date.now(), 
+            name: file.name, 
+            data: event.target.result, 
+            date: new Date().toLocaleDateString(),
+            isDemo: false 
+        };
+        setFiles([...files, newFile]);
+        alert("File Encrypted & Uploaded Successfully!");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDownload = (file) => {
+    if (file.isDemo) {
+        alert("This is a demo file. Please upload a real file to test download.");
+        return;
+    }
+    if (file.data) {
+        const a = document.createElement("a");
+        a.href = file.data;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alert(`Downloading decrypted file: ${file.name}`);
+    } else { alert("File content unavailable."); }
+  };
+
+  const handleShare = (fileName) => {
+    const dummyLink = `https://securevault.app/share/${Math.random().toString(36).substring(7)}`;
+    navigator.clipboard.writeText(dummyLink);
+    alert(`Share Link Copied! Send this to anyone:\n${dummyLink}`);
+  };
+
+  // --- TRASH MANAGEMENT ---
+  const moveToTrash = (id) => {
+    const fileToMove = files.find(f => f.id === id);
+    setTrashFiles([...trashFiles, fileToMove]);
+    setFiles(files.filter(f => f.id !== id));
+  };
+
+  const restoreFromTrash = (id) => {
+    const fileToRestore = trashFiles.find(f => f.id === id);
+    setFiles([...files, fileToRestore]);
+    setTrashFiles(trashFiles.filter(f => f.id !== id));
+  };
+
+  const deletePermanently = (id) => {
+    if(window.confirm("Permanently delete this file? This cannot be undone.")) {
+        setTrashFiles(trashFiles.filter(f => f.id !== id));
+    }
+  };
+
+  const handleUpdateProfile = () => {
+    const user = { name, email, password };
+    localStorage.setItem("secureUser", JSON.stringify(user));
+    alert("Profile Updated Successfully!");
+    setView("dashboard");
+  };
+
+
+  // --- RENDER VIEW ---
+  return (
+    <div style={styles.container}>
+      
+      {/* === DASHBOARD & SETTINGS & TRASH === */}
+      {(view === "dashboard" || view === "settings" || view === "trash") ? (
+        <>
+          <nav style={styles.navbar}>
+            <div style={styles.navLogo} onClick={() => setView("dashboard")}>
+                <Lock size={24} fill="#f1c40f" /> SecureVault
+            </div>
+            <div style={styles.navRight}>
+              <button style={styles.iconBtn} onClick={() => setDarkMode(!darkMode)} title="Toggle Theme">
+                {darkMode ? <Sun size={20}/> : <Moon size={20}/>}
+              </button>
+              <button style={styles.iconBtn} onClick={() => setView("settings")} title="Settings">
+                <Settings size={20}/>
+              </button>
+              <button style={styles.logoutBtn} onClick={() => setView("login")}>Logout</button>
+            </div>
+          </nav>
+
+          <div style={styles.mainContent}>
+            {/* SETTINGS VIEW */}
+            {view === "settings" ? (
+                <div style={styles.card}>
+                    <div style={styles.sectionHeader}><User size={20}/> Profile Settings</div>
+                    <label style={{fontSize:"12px", color:"gray"}}>Full Name</label>
+                    <input style={styles.input} value={name} onChange={(e)=>setName(e.target.value)} placeholder="Full Name" />
+                    <label style={{fontSize:"12px", color:"gray"}}>Email</label>
+                    <input style={styles.input} value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Email" />
+                    <label style={{fontSize:"12px", color:"gray"}}>Password</label>
+                    <input style={styles.input} value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="New Password" />
+                    <div style={{marginTop:"10px"}}>
+                        <button style={{...styles.loginBtn, width:"auto"}} onClick={handleUpdateProfile}>Save Changes</button>
+                        <button style={{...styles.btnBase, backgroundColor:"gray", marginLeft:"10px", padding:"12px 20px"}} onClick={()=>setView("dashboard")}>Cancel</button>
+                    </div>
+                </div>
+            ) : view === "trash" ? (
+                /* TRASH VIEW */
+                <div style={styles.card}>
+                    <div style={styles.sectionHeader}>
+                        <div style={{display:"flex", gap:"10px"}}><Trash2 size={20} color="#ef4444"/> Recycle Bin</div>
+                        <button style={{...styles.btnBase, backgroundColor:"gray", marginLeft:"auto"}} onClick={()=>setView("dashboard")}>Back to Dashboard</button>
+                    </div>
+                    {trashFiles.length === 0 ? <p style={{color:"#999", textAlign:"center"}}>Trash is empty.</p> : trashFiles.map((f, i) => (
+                        <div key={i} style={styles.fileRowDeleted}>
+                            <div style={styles.fileName}><FileText size={18} color="#bdc3c7" /> {f.name}</div>
+                            <div style={styles.actionBtns}>
+                                <button style={{...styles.btnBase, backgroundColor:"#3b82f6"}} onClick={() => restoreFromTrash(f.id)}><RefreshCcw size={14} /> Restore</button>
+                                <button style={{...styles.btnBase, backgroundColor:"#ef4444"}} onClick={() => deletePermanently(f.id)}>Delete Forever</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <>
+                    {/* DASHBOARD MAIN */}
+                    <div style={styles.card}>
+                        <div style={styles.sectionHeader}><Upload size={20} color="#e74c3c"/> Upload Secure File</div>
+                        <div 
+                            style={styles.uploadContainer}
+                            onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
+                        >
+                            <input type="file" id="file-upload" style={{display:"none"}} onChange={handleFileUpload} />
+                            <label htmlFor="file-upload" style={{cursor:"pointer"}}>
+                                <div style={{marginBottom:"15px"}}><Upload size={48} color={darkMode ? "#fff" : "#3498db"} style={{margin:"auto"}}/></div>
+                                <p style={{fontSize:"18px", fontWeight:"bold", marginBottom:"5px"}}>Drag & Drop files here</p>
+                                <p style={{fontSize:"14px", color: theme.iconColor}}>or <span style={{color:"#3498db", textDecoration:"underline"}}>Browse Computer</span></p>
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* FILE LIST WITH SHARE */}
+                    <div style={styles.card}>
+                        <div style={styles.sectionHeader}>
+                             <div style={{display:"flex", gap:"10px"}}><Folder size={20} color="#f39c12"/> Your Files</div>
+                             <div style={styles.trashToggle} onClick={()=>setView("trash")}>Trash ({trashFiles.length})</div>
+                        </div>
+                        {files.length === 0 ? <p style={{color:"#999", textAlign:"center", padding:"20px"}}>No files uploaded yet.</p> : files.map((f, i) => (
+                        <div key={i} style={styles.fileRow}>
+                            <div style={styles.fileName}>
+                                <FileText size={18} color={theme.iconColor} /> 
+                                <div>
+                                    {f.name}
+                                    <div style={{fontSize:"10px", color:"gray"}}>{f.date || "Unknown Date"}</div>
+                                </div>
+                            </div>
+                            <div style={styles.actionBtns}>
+                                <button style={{...styles.btnBase, backgroundColor:"#8b5cf6"}} onClick={() => handleShare(f.name)} title="Share Link">
+                                    <Share2 size={14} /> Share
+                                </button>
+                                <button style={{...styles.btnBase, backgroundColor:"#22c55e"}} onClick={() => handleDownload(f)} title="Decrypt & Download">
+                                    <Download size={14} /> Download
+                                </button>
+                                <button style={{...styles.btnBase, backgroundColor:"#ef4444", padding:"8px"}} onClick={() => moveToTrash(f.id)} title="Move to Trash">
+                                    <Trash2 size={14} />
+                                </button>
+                            </div>
+                        </div>
+                        ))}
+                    </div>
+                </>
+            )}
+          </div>
+        </>
+      ) : (
+        /* === AUTHENTICATION SCREENS === */
+        <div style={styles.authContainer}>
+           <div style={styles.authBox}>
+             <div style={{display:"flex", justifyContent:"center", marginBottom:"20px"}}>
+               <div style={{background:"#dcfce7", padding:"15px", borderRadius:"50%"}}><Lock size={32} color="#16a34a" /></div>
+             </div>
+             
+             {/* LOGIN VIEW */}
+             {view === "login" && (
+                <>
+                  <h2 style={{marginBottom:"20px", fontSize:"24px", fontWeight:"bold"}}>Secure Login</h2>
+                  <input style={styles.input} placeholder="Username" value={name} onChange={e=>setName(e.target.value)} />
+                  <input style={styles.input} type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} />
+                  <button style={styles.loginBtn} onClick={handleLogin}>Login</button>
+                  
+                  {/* UPDATED: Forgot Password on new line */}
+                  <div style={{marginTop:"15px"}}>
+                    <div style={styles.link} onClick={() => setView("register")}>New here? Create an account</div>
+                    <div style={{...styles.link, color:"#ef4444", marginTop:"10px"}} onClick={() => setView("forgot-email")}>Forgot Password?</div>
+                  </div>
+                </>
+             )}
+             
+             {view === "register" && (
+                <>
+                  <h2 style={{marginBottom:"20px", fontSize:"24px", fontWeight:"bold"}}>Create Account</h2>
+                  <input style={styles.input} placeholder="Full Name" value={name} onChange={e=>setName(e.target.value)} />
+                  <input style={styles.input} placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
+                  <input style={styles.input} type="password" placeholder="Set Password" value={password} onChange={e=>setPassword(e.target.value)} />
+                  <button style={styles.loginBtn} onClick={handleRegister}>Register</button>
+                  <div style={styles.link} onClick={() => setView("login")}>Back to Login</div>
+                </>
+             )}
+
+             {(view === "otp" || view === "forgot-otp") && (
+                <>
+                  <h2 style={{marginBottom:"20px", fontSize:"24px", fontWeight:"bold"}}>Enter OTP</h2>
+                  <p style={{marginBottom:"20px", color: theme.iconColor, fontSize:"14px"}}>Code sent to {email}</p>
+                  <input style={{...styles.input, textAlign:"center", letterSpacing:"5px", fontSize:"20px"}} placeholder="••••" value={otp} onChange={e=>setOtp(e.target.value)} />
+                  <button style={styles.loginBtn} onClick={view === "otp" ? verifyLoginOtp : handleVerifyForgotOtp}>Verify</button>
+                </>
+             )}
+
+             {view === "forgot-email" && (
+                <>
+                   <h2 style={{marginBottom:"20px", fontSize:"24px", fontWeight:"bold"}}>Reset Password</h2>
+                   <input style={styles.input} placeholder="Enter your registered Email" value={email} onChange={e=>setEmail(e.target.value)} />
+                   <button style={styles.loginBtn} onClick={handleForgotPassword}>Send Reset OTP</button>
+                   <div style={styles.link} onClick={() => setView("login")}>Cancel</div>
+                </>
+             )}
+             {view === "forgot-otp" && (
+                <>
+                   <h2 style={{marginBottom:"20px", fontSize:"24px", fontWeight:"bold"}}>Verify Reset OTP</h2>
+                   <input style={{...styles.input, textAlign:"center", fontSize:"20px"}} placeholder="Enter OTP" value={otp} onChange={e=>setOtp(e.target.value)} />
+                   <button style={styles.loginBtn} onClick={handleVerifyForgotOtp}>Verify</button>
+                </>
+             )}
+             {view === "reset-password" && (
+                <>
+                   <h2 style={{marginBottom:"20px", fontSize:"24px", fontWeight:"bold"}}>New Password</h2>
+                   <input style={styles.input} type="password" placeholder="Enter New Password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} />
+                   <button style={styles.loginBtn} onClick={handleResetPassword}>Update Password</button>
+                </>
+             )}
+
+           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+export default App;
