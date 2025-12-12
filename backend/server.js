@@ -56,11 +56,3 @@ app.listen(5000, () => {
     console.log("Server running on port 5000");
 });
 
-
-//  cd "OneDrive\Desktop\Secure File Management System\backend"
-// npx kill-port 5000
-//  node server.js
-
-
-// cd "OneDrive\Desktop\Secure File Management System\frontend"
-// npm start 
